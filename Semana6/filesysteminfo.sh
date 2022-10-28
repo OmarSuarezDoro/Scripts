@@ -27,6 +27,7 @@ cat << _EOF_
    ${TEXT_BOLD}${TEXT_BLUE}Este es un script que muestra información del sistema${TEXT_RESET}
  ${TEXT_ULINE}Parametros${TEXT_RESET}
    --help - Muestra esta ventana de ayuda.
+    -inv - Invierte la salida del comando.
 _EOF_
 }
 
