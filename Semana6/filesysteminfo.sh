@@ -61,7 +61,7 @@ while [ "$1" != "" ];do
 Terminando ejecución...
 _EOF_
 
-        exit 0
+        exit 1
         ;;
   esac
   shift
