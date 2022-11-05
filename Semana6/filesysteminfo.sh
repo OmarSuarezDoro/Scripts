@@ -25,9 +25,9 @@ TEXT_RESET=$(tput sgr0)
 function Usage() {
 cat << _EOF_
    ${TEXT_BOLD}${TEXT_BLUE}Este es un script que muestra información del sistema${TEXT_RESET}
-  Su modo de ejecución es -> ${TEXT_BOLD}${TEXT_GREEN}./filesysteminfo [-h|--help] [-inv]${TEXT_RESET}
+  Su modo de ejecución es: ${TEXT_BOLD}${TEXT_GREEN}./filesysteminfo [parametro] ${TEXT_RESET}
  ${TEXT_ULINE}Parametros${TEXT_RESET}
-   --help - Muestra esta ventana de ayuda.
+   -h|--help - Muestra esta ventana de ayuda.
     -inv - Invierte la salida del comando.
 _EOF_
 }
@@ -35,11 +35,14 @@ _EOF_
 function MountDevices() {
   if [ $# == 0 ];then
     for device in $mounted_devices;do
-      df --all --human-readable -t $device --output=source,used,target | tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1
+      echo -n "$(df --all --human-readable -t $device --output=source,used,target|tail -n +2|wc -l) "
+      echo -n "$(df --all --human-readable -t $device --output=source,used,target | tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) "
+      echo "$(stat --format="%t %T" $(df --all --human-readable -t $device --output=source| tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) 2>/dev/null || echo "* *")"
+
     done
   elif [ $1 == "-inv" ];then
     for device in $mounted_devices_r;do
-      df --all --human-readable -t $device --output=source,used,target | tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1
+      echo "$(df --all --human-readable -t $device --output=source,used,target | tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) $(df --all --human-readable -t $device --output=source,used,target|tail -n +2|wc -l)" 
     done
   fi 
 
@@ -66,5 +69,4 @@ _EOF_
   esac
   shift
 done
-
 MountDevices
