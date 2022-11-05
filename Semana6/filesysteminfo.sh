@@ -42,7 +42,9 @@ function MountDevices() {
     done
   elif [ $1 == "-inv" ];then
     for device in $mounted_devices_r;do
-      echo "$(df --all --human-readable -t $device --output=source,used,target | tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) $(df --all --human-readable -t $device --output=source,used,target|tail -n +2|wc -l)" 
+      echo -n "$(df --all --human-readable -t $device --output=source,used,target|tail -n +2|wc -l) "
+      echo -n "$(df --all --human-readable -t $device --output=source,used,target | tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) "
+      echo "$(stat --format="%t %T" $(df --all --human-readable -t $device --output=source| tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) 2>/dev/null || echo "* *")"
     done
   fi 
 
