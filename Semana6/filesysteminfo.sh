@@ -46,6 +46,16 @@ function MountDevices() {
       echo -n "$(df --all --human-readable -t $device --output=source,used,target | tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) "
       echo "$(stat --format="%t %T" $(df --all --human-readable -t $device --output=source| tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) 2>/dev/null || echo "* *")"
     done
+  elif [ $1 == "-devicefiles" ];then
+    for device in $mounted_devices;do
+      aux_var=$(stat --format="%t %T" $(df --all --human-readable -t $device --output=source| tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) 2>/dev/null)
+      if [ "$?" == "0" ];then 
+        echo -n "$(df --all --human-readable -t $device --output=source,used,target|tail -n +2|wc -l) "
+        echo -n "$(df --all --human-readable -t $device --output=source,used,target | tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) "
+        echo -n "$aux_var "
+        #echo "$(lsof $(df --all --human-readable -t $device --output=source| tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1))"
+      fi
+    done
   fi 
 
 }
@@ -58,6 +68,10 @@ while [ "$1" != "" ];do
         exit 0
         ;;
      -inv)
+		    MountDevices $1
+        exit 0
+        ;;
+      -devicefiles)
 		    MountDevices $1
         exit 0
         ;;
