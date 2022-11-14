@@ -7,7 +7,7 @@ TITLE="Información del sistema para $HOSTNAME"
 RIGHT_NOW=$(date +"%x %r%Z")
 TIME_STAMP="Actualizada el $RIGHT_NOW por $USER"
 ##### Variables
-
+op=0
 values=0
 ##### Estilos
 
@@ -50,15 +50,18 @@ function MountDevices() {
     done
     exit 0
   fi 
+    echo -n "${TEXT_BOLD}${TEXT_GREEN}NºDEVICES TYPE DEVICE USED MOUNT-POINT MINOR MAYOR${TEXT_RESET}"
+    echo ""
   for device in $mounted_devices;do
-    echo -n "$(df --all --human-readable -t $device --output=source,used,target|tail -n +2|wc -l) " 
-    echo -n "$(df --all --human-readable -t $device --output=source,used,target | tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) "
+    n_devices=$(df --all --human-readable -t $device --output=source,used,target|tail -n +2|wc -l)
+    list=$(df --all --human-readable -t $device --output=source,used,target | tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1)
+    minor_major_number=$(stat --format="%t %T" $(df --all --human-readable -t $device --output=source| tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) 2>/dev/null || echo "* *")
     values=$(df --all -t $device --output=used| tail -n +2)
     for value in $values;do
       counter=$(($counter + $value))
     done
-    echo -n "$counter "
-    echo "$(stat --format="%t %T" $(df --all --human-readable -t $device --output=source| tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) 2>/dev/null || echo "* *")"
+    print_var="$n_devices $device $list $counter $minor_major_number" 
+    echo "$print_var"
   done
 }
 
@@ -87,4 +90,4 @@ _EOF_
   esac
   shift
 done
-MountDevices
+MountDevices 
