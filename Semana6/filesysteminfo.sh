@@ -39,18 +39,25 @@ function MountDevices() {
   elif [ $1 == "-inv" ];then
     mounted_devices=$(mount|cut -d ' ' -f 5|sort -r|uniq)
   elif [ $1 == "-devicefiles" ];then
+    echo "${TEXT_BOLD}${TEXT_GREEN}NºDEVICES TYPE DEVICE USED MOUNT-POINT SUM MINOR MAYOR${TEXT_RESET}"
     mounted_devices=$(mount|cut -d ' ' -f 5|sort|uniq)
     for device in $mounted_devices;do
       aux_var=$(stat --format="%t %T" $(df --all --human-readable -t $device --output=source| tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) 2>/dev/null)
       if [ "$?" == "0" ];then 
-        echo -n "$(df --all --human-readable -t $device --output=source,used,target|tail -n +2|wc -l) "
-        echo -n "$(df --all --human-readable -t $device --output=source,used,target | tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) "
-        echo "$aux_var "
+        n_devices=$(df --all --human-readable -t $device --output=source,used,target|tail -n +2|wc -l)
+        list=$(df --all --human-readable -t $device --output=source,used,target | tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1)
+        minor_major_number=$(stat --format="%t %T" $(df --all --human-readable -t $device --output=source| tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) 2>/dev/null || echo "* *")
+        values=$(df --all -t $device --output=used| tail -n +2)
+        for value in $values;do
+          counter=$(($counter + $value))
+        done
+        print_var="$n_devices $device $list $counter $aux_var"
+        echo $print_var
       fi
     done
     exit 0
   fi 
-    echo -n "${TEXT_BOLD}${TEXT_GREEN}NºDEVICES TYPE DEVICE USED MOUNT-POINT MINOR MAYOR${TEXT_RESET}"
+    echo -n "${TEXT_BOLD}${TEXT_GREEN}NºDEVICES TYPE DEVICE USED MOUNT-POINT SUM MINOR MAYOR${TEXT_RESET}"
     echo ""
   for device in $mounted_devices;do
     n_devices=$(df --all --human-readable -t $device --output=source,used,target|tail -n +2|wc -l)
@@ -73,11 +80,11 @@ while [ "$1" != "" ];do
         exit 0
         ;;
      -inv)
-		    MountDevices $1
+		    MountDevices $1|column -t
         exit 0
         ;;
       -devicefiles)
-		    MountDevices $1
+		    MountDevices $1|column -t
         exit 0
         ;;
       *)
@@ -90,4 +97,4 @@ _EOF_
   esac
   shift
 done
-MountDevices 
+MountDevices |column -t
