@@ -7,9 +7,8 @@ TITLE="Información del sistema para $HOSTNAME"
 RIGHT_NOW=$(date +"%x %r%Z")
 TIME_STAMP="Actualizada el $RIGHT_NOW por $USER"
 ##### Variables
-mounted_devices=$(mount|cut -d ' ' -f 5|sort|uniq)
-mounted_devices_r=$(mount|cut -d ' ' -f 5|sort -r|uniq)
 
+values=0
 ##### Estilos
 
 TEXT_BOLD=$(tput bold)
@@ -33,31 +32,34 @@ _EOF_
 }
 
 function MountDevices() {
+  counter=0
+  mounted_devices=
   if [ $# == 0 ];then
-    for device in $mounted_devices;do
-      echo -n "$(df --all --human-readable -t $device --output=source,used,target|tail -n +2|wc -l) "
-      echo -n "$(df --all --human-readable -t $device --output=source,used,target | tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) "
-      echo "$(stat --format="%t %T" $(df --all --human-readable -t $device --output=source| tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) 2>/dev/null || echo "* *")"
-
-    done
+    mounted_devices=$(mount|cut -d ' ' -f 5|sort|uniq)
   elif [ $1 == "-inv" ];then
-    for device in $mounted_devices_r;do
-      echo -n "$(df --all --human-readable -t $device --output=source,used,target|tail -n +2|wc -l) "
-      echo -n "$(df --all --human-readable -t $device --output=source,used,target | tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) "
-      echo "$(stat --format="%t %T" $(df --all --human-readable -t $device --output=source| tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) 2>/dev/null || echo "* *")"
-    done
+    mounted_devices=$(mount|cut -d ' ' -f 5|sort -r|uniq)
   elif [ $1 == "-devicefiles" ];then
+    mounted_devices=$(mount|cut -d ' ' -f 5|sort|uniq)
     for device in $mounted_devices;do
       aux_var=$(stat --format="%t %T" $(df --all --human-readable -t $device --output=source| tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) 2>/dev/null)
       if [ "$?" == "0" ];then 
         echo -n "$(df --all --human-readable -t $device --output=source,used,target|tail -n +2|wc -l) "
         echo -n "$(df --all --human-readable -t $device --output=source,used,target | tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) "
-        echo -n "$aux_var "
-        #echo "$(lsof $(df --all --human-readable -t $device --output=source| tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1))"
+        echo "$aux_var "
       fi
     done
+    exit 0
   fi 
-
+  for device in $mounted_devices;do
+    echo -n "$(df --all --human-readable -t $device --output=source,used,target|tail -n +2|wc -l) " 
+    echo -n "$(df --all --human-readable -t $device --output=source,used,target | tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) "
+    values=$(df --all -t $device --output=used| tail -n +2)
+    for value in $values;do
+      counter=$(($counter + $value))
+    done
+    echo -n "$counter "
+    echo "$(stat --format="%t %T" $(df --all --human-readable -t $device --output=source| tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) 2>/dev/null || echo "* *")"
+  done
 }
 
 ##### Programa principal
