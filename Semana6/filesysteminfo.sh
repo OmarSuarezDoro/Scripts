@@ -181,7 +181,6 @@ _EOF_
   esac
   shift
 done
-
 # LLamada a la función que detecta si ha ocurrido algún error
 DetectErrors
 # LLamada a la función que provee información del sistema
