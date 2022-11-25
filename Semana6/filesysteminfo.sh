@@ -41,7 +41,6 @@ cat << _EOF_
    -sopen - Ordena según el número de archivos
    -inv - Invierte la salida del comando. Aplicable a todas las opciones.
    -noheader - No muestra el título.
-
 _EOF_
 }
 
