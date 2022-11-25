@@ -75,7 +75,9 @@ function MountDevices() {
         counter=$(($counter + $value))
       done
       print_var="$n_devices $device $list $counter $minor_number $major_number" 
-      if [ "$device_files" == "1" ];then      
+      if [ "$device_files" == "1" ];then 
+        minor_number=$(echo $minor_number| tr '[:upper:]' '[:lower:]')
+        major_number=$(echo $major_number| tr '[:upper:]' '[:lower:]')    
         minor_number=$(echo "obase=10; ibase=16;$minor_number;"|bc)
         major_number=$(echo "obase=10; ibase=16;$major_number;"|bc )
         if [ "$usuarios_op" == "1" ];then
