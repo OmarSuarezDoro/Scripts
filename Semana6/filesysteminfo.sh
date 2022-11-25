@@ -1,17 +1,17 @@
 #!/bin/bash
+
 ################################################
 # filesysteminfo
 # Autor : Omar Suárez Doro
 # Asignatura: Sistemas Operativos
 # Entregable final de BASH
 # Funcionamiento:
+#   Este script muestra información acerca del sistema
+#   concretamente de los dispositivos montados.
 #
-#
-##### Constantes
-TITLE="Información del sistema para $HOSTNAME"
-RIGHT_NOW=$(date +"%x %r%Z")
-TIME_STAMP="Actualizada el $RIGHT_NOW por $USER"
-##### Variables
+################################################
+
+# Variables #
 values=0
 campo_ordenar=4
 basename=$(basename $0)
@@ -19,7 +19,7 @@ usuarios=""
 invertir_auxiliar=""
 variable_auxiliar=""
 
-##### Estilos
+# Estilos #
 TEXT_BOLD=$(tput bold)
 TEXT_ULINE=$(tput sgr 0 1)
 TEXT_GREEN=$(tput setaf 2)
@@ -29,20 +29,7 @@ TEXT_BLUE=$(tput setaf 32)
 TEXT_RED=$(tput setaf 1)
 TEXT_RESET=$(tput sgr0)
 
-##### Funciones
-function Usage() {
-cat << _EOF_
-   ${TEXT_BOLD}${TEXT_BLUE}Este es un script que muestra información del sistema${TEXT_RESET}
-  Su modo de ejecución es: ${TEXT_BOLD}${TEXT_GREEN}./filesysteminfo [parametro] ${TEXT_RESET}
- ${TEXT_ULINE}Parametros${TEXT_RESET}
-   -h|--help - Muestra esta ventana de ayuda.
-   -devicefiles - Muestra solo los dispositivos que se representan mediante archivos
-   -sdevice - Ordena según el número de dispositivos asociados a ese sistema de archivos
-   -sopen - Ordena según el número de archivos
-   -inv - Invierte la salida del comando. Aplicable a todas las opciones.
-   -noheader - No muestra el título.
-_EOF_
-}
+# Funciones #
 
 function SystemInfo() {
   # Imprimimos titulo, e inicializamos la variable sobre la que iterar
@@ -88,7 +75,6 @@ function MountDevices() {
         counter=$(($counter + $value))
       done
       print_var="$n_devices $device $list $counter $minor_number $major_number" 
-      # En caso de emplear la opcion devicefiles, añadirá un nuevo campo que será el número de dispositivos abiertos
       if [ "$device_files" == "1" ];then      
         minor_number=$(echo "obase=10; ibase=16;$minor_number;"|bc)
         major_number=$(echo "obase=10; ibase=16;$major_number;"|bc )
@@ -102,6 +88,20 @@ function MountDevices() {
       counter=0
     fi
   done
+}
+
+function Usage() {
+cat << _EOF_
+   ${TEXT_BOLD}${TEXT_BLUE}Este es un script que muestra información del sistema${TEXT_RESET}
+  Su modo de ejecución es: ${TEXT_BOLD}${TEXT_GREEN}./filesysteminfo [parametro] ${TEXT_RESET}
+ ${TEXT_ULINE}Parametros${TEXT_RESET}
+   -h|--help - Muestra esta ventana de ayuda.
+   -devicefiles - Muestra solo los dispositivos que se representan mediante archivos
+   -sdevice - Ordena según el número de dispositivos asociados a ese sistema de archivos
+   -sopen - Ordena según el número de archivos
+   -inv - Invierte la salida del comando. Aplicable a todas las opciones.
+   -noheader - No muestra el título.
+_EOF_
 }
 
 function DetectErrors() {
