@@ -1,17 +1,25 @@
 #!/bin/bash
-
-# filesysteminfo - Un script que informa del estado del sistema
-
+################################################
+# filesysteminfo
+# Autor : Omar Suárez Doro
+# Asignatura: Sistemas Operativos
+# Entregable final de BASH
+# Funcionamiento:
+#
+#
 ##### Constantes
 TITLE="Información del sistema para $HOSTNAME"
 RIGHT_NOW=$(date +"%x %r%Z")
 TIME_STAMP="Actualizada el $RIGHT_NOW por $USER"
 ##### Variables
-op=0
 values=0
+campo_ordenar=4
+basename=$(basename $0)
 usuarios=""
-##### Estilos
+invertir_auxiliar=""
+variable_auxiliar=""
 
+##### Estilos
 TEXT_BOLD=$(tput bold)
 TEXT_ULINE=$(tput sgr 0 1)
 TEXT_GREEN=$(tput setaf 2)
@@ -28,25 +36,43 @@ cat << _EOF_
   Su modo de ejecución es: ${TEXT_BOLD}${TEXT_GREEN}./filesysteminfo [parametro] ${TEXT_RESET}
  ${TEXT_ULINE}Parametros${TEXT_RESET}
    -h|--help - Muestra esta ventana de ayuda.
-    -inv - Invierte la salida del comando.
+   -devicefiles - Muestra solo los dispositivos que se representan mediante archivos
+   -sdevice - Ordena según el número de dispositivos asociados a ese sistema de archivos
+   -sopen - Ordena según el número de archivos
+   -inv - Invierte la salida del comando. Aplicable a todas las opciones.
+   -noheader - No muestra el título.
+
 _EOF_
 }
 
-function MountDevices() {
-  counter=0
-  invertir_auxiliar=""
-  variable_auxiliar=""
+function SystemInfo() {
+  # Imprimimos titulo, e inicializamos la variable sobre la que iterar
+  if [ "$no_header" == "0" ];then
+    echo -n "${TEXT_BOLD}${TEXT_GREEN}NºDEVICES TYPE DEVICE USED MOUNT-POINT SUM MINOR MAYOR${TEXT_RESET}"
+  fi
+  if [ $device_files == "1" ] && [ "$no_header" == "0" ];then
+    echo -n "${TEXT_BOLD}${TEXT_GREEN} NºOPENED-DEVICES${TEXT_RESET}"
+  fi
+  echo ""
+  
   # En el caso de que se vaya a invertir
   if [ $invertir == "1" ];then
     invertir_auxiliar="-r"
   fi
-  # Imprimimos titulo, e inicializamos la variable sobre la que iterar
-  echo -n "${TEXT_BOLD}${TEXT_GREEN}NºDEVICES TYPE DEVICE USED MOUNT-POINT SUM MINOR MAYOR${TEXT_RESET}"
-  if [ $device_files == "1" ];then
-    echo -n "${TEXT_BOLD}${TEXT_GREEN} NºOPENED-DEVICES${TEXT_RESET}"
+
+  if [ "$campo_ordenar" == "4" ]; then
+    MountDevices
+    return 0
+  else
+    MountDevices| sort -k $campo_ordenar -n $invertir_auxiliar
+    return 0
   fi
-  echo ""
+}
+
+function MountDevices() {
+  counter=0
   mounted_devices=$(mount|cut -d ' ' -f 5|sort $invertir_auxiliar |uniq)
+  # Iteramos
   for device in $mounted_devices;do
     echo -n ""
     # En el caso de querer imprimir solo los archivos
@@ -67,7 +93,7 @@ function MountDevices() {
       if [ "$device_files" == "1" ];then      
         minor_number=$(echo "obase=10; ibase=16;$minor_number;"|bc)
         major_number=$(echo "obase=10; ibase=16;$major_number;"|bc )
-        if [ "$usuarios_op" == "1"];then
+        if [ "$usuarios_op" == "1" ];then
           variable_auxiliar="-u $usuarios" 
         fi
         number_of_opened_devices=$(lsof $variable_auxiliar | grep "$minor_number,$major_number"|wc -l)
@@ -79,12 +105,35 @@ function MountDevices() {
   done
 }
 
+function DetectErrors() {
+  # Tratamiento de errores
+  if [ "$usuarios" == "" ] && [ "$usuarios_op" == "1" ];then
+    error_manager "Número de usuarios inválido"
+  fi 
+
+  if [ "$s_device" == "1" ] && [ "$s_open" == "1" ];then
+    error_manager "La opción -sdevice y -sopen no son compatibles."
+  fi 
+
+  if [ "$s_open" == "1" ] && [ "$device_files" == "0" ] && [ "$usuarios_op" == "0" ];then
+    error_manager "La opción -sopen solo se puede emplear con -u o -devicefiles."
+  fi 
+}
+
+function error_manager() {
+  echo "Error $basename: $1"
+  exit 1
+}
+
 ## Variables de control ##
 device_files=0
 invertir=0
 consume_campos=0
 usuarios_op=0
-
+no_header=0
+visited=0
+s_open=0
+s_device=0
 
 ##### Programa principal
 while [ "$1" != "" ];do
@@ -103,11 +152,25 @@ while [ "$1" != "" ];do
         ;;
       -u)
         consume_campos=1
+        device_files=1
         usuarios_op=1
+        ;;
+      -noheader)
+        no_header=1
+        ;;
+      -sopen)
+        campo_ordenar=9
+        visited=1
+        s_open=1
+        ;;
+      -sdevice)
+        campo_ordenar=1
+        visited=1
+        s_device=1
         ;;
       *)
         if [ "$consume_campos" == "1" ];then
-          usuarios="$usuarios $1"
+          usuarios="$usuarios,$1"
         else
           cat << _EOF_
             ${TEXT_RED}${TEXT_BOLD}[-]OPCIÓN NO VÁLIDA${TEXT_RESET}
@@ -119,4 +182,8 @@ _EOF_
   esac
   shift
 done
-MountDevices |column -t
+
+# LLamada a la función que detecta si ha ocurrido algún error
+DetectErrors
+# LLamada a la función que provee información del sistema
+SystemInfo | column -t
