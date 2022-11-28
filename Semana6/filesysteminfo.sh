@@ -13,7 +13,7 @@
 
 # Variables #
 values=0
-campo_ordenar=4
+campo_ordenar=-1
 basename=$(basename $0)
 usuarios=""
 invertir_auxiliar=""
@@ -36,17 +36,17 @@ function SystemInfo() {
   if [ "$no_header" == "0" ];then
     echo -n "${TEXT_BOLD}${TEXT_GREEN}NºDEVICES TYPE DEVICE USED MOUNT-POINT SUM MINOR MAYOR${TEXT_RESET}"
   fi
-  if [ $device_files == "1" ] && [ "$no_header" == "0" ];then
+  if [ "$device_files" == "1" ] && [ "$no_header" == "0" ];then
     echo -n "${TEXT_BOLD}${TEXT_GREEN} NºOPENED-DEVICES${TEXT_RESET}"
   fi
   echo ""
   
   # En el caso de que se vaya a invertir
-  if [ $invertir == "1" ];then
+  if [ "$invertir" == "1" ];then
     invertir_auxiliar="-r"
   fi
 
-  if [ "$campo_ordenar" == "4" ]; then
+  if [ "$campo_ordenar" == "-1" ]; then
     MountDevices
     return 0
   else
@@ -62,10 +62,10 @@ function MountDevices() {
   for device in $mounted_devices;do
     echo -n ""
     # En el caso de querer imprimir solo los archivos
-    if [ $device_files == "1" ];then
+    if [ "$device_files" == "1" ];then
       aux_var=$(stat --format="%T %t" $(df --all --human-readable -t $device --output=source| tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) 2>/dev/null)
     fi
-    if [ $? == "0" ];then
+    if [ "$?" == "0" ];then
       n_devices=$(df --all --human-readable -t $device --output=source,used,target|tail -n +2|wc -l)
       list=$(df --all --human-readable -t $device --output=source,used,target | tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1)
       minor_number=$(stat --format="%T" $(df --all --human-readable -t $device --output=source| tail -n +2 | sort -k'2' --human-numeric-sort -r | head -n +1) 2>/dev/null || echo "*")
@@ -122,7 +122,7 @@ function DetectErrors() {
 }
 
 function error_manager() {
-  echo "Error $basename: $1"
+  echo "${TEXT_RED}Error $basename: $1${TEXT_RESET}"
   exit 1
 }
 
@@ -157,14 +157,17 @@ while [ "$1" != "" ];do
         usuarios_op=1
         ;;
       -noheader)
+        consume_campos=0
         no_header=1
         ;;
       -sopen)
+        consume_campos=0
         campo_ordenar=9
         visited=1
         s_open=1
         ;;
       -sdevice)
+        consume_campos=0
         campo_ordenar=1
         visited=1
         s_device=1
